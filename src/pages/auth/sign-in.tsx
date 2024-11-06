@@ -2,7 +2,7 @@ import { ArrowRight, Eye, KeyRound, Mail } from "lucide-react";
 
 export function SignIn() {
   return (
-    <div className="rounded-3xl bg-white h-screen">
+    <div className="rounded-3xl bg-white">
       <div className="flex flex-col m-6 p-20 gap-12 border-r-blue-500">
         <header className="flex flex-col gap-2">
           <h2 className="text-gray-500">Acesse sua conta</h2>
@@ -47,7 +47,7 @@ export function SignIn() {
 
         <footer>
           <span className="text-gray-300 mb-5">Ainda não tem uma conta?</span>
-          <button className="justify-between flex rounded-lg border border-orange-base border-transparent text-orange-base p-2 w-full">
+          <button className="justify-between flex rounded-lg border border-orange-base text-orange-base p-2 w-full">
             Acessar 
             <ArrowRight/>
           </button>
