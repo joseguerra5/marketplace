@@ -1,10 +1,11 @@
 import { Box, ChartColumnBig, Plus } from "lucide-react";
 import { NavLink } from "./nav-link";
+import { Link } from "react-router-dom";
 
 export function Header() {
   return (
     <header className="flex justify-between  py-5 ">
-      <div><img src="../src/assets/logo-icon.svg" /></div>
+      <Link to="/dashboard"><img src="../src/assets/logo-icon.svg" /></Link>
 
       <div className="flex gap-2">
         <NavLink to="/dashboard">
@@ -18,10 +19,10 @@ export function Header() {
         </NavLink>
       </div>
       <div className="flex gap-3 items-center justify-center">
-       <button className="border-none bg-orange-base text-white flex gap-2 p-1 rounded-md">
+       <Link to="/product/new" className="border-none bg-orange-base hover:bg-orange-dark text-white flex gap-2 p-1 rounded-md">
         <Plus/>
         <span>Novo produto</span>
-       </button>
+       </Link>
        <img src="../src/assets/avatar.jpg" alt="" className="rounded-xl aspect-square w-12" />
       </div>
     </header>

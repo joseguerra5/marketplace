@@ -6,6 +6,7 @@ import { SignUp } from "./pages/auth/sign-up"
 import { Dashboard } from "./pages/app/dashboard"
 import { Products } from "./pages/app/products"
 import { ProductDetails } from "./pages/app/product-details"
+import { AddProduct } from "./pages/app/add-product"
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,9 @@ export const router = createBrowserRouter([
       {path: "/dashboard", element: <Dashboard/>},
       {path: "/products", element: <Products/>},
       {path: `/product/:ProductId`, element: <ProductDetails/>},
+      {path: `/product/new`, element: <AddProduct/>},
+
+  
     ]
   },
 
