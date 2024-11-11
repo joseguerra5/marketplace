@@ -16,7 +16,6 @@ export function Header() {
     queryFn: getProfile,
     queryKey: ["profile"],
   })
-  console.log("profile:", profile)
 
  const {mutateAsync: signOutFn, isPending: isSignOut} = useMutation({
   mutationFn: SignOut,

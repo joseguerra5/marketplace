@@ -1,11 +1,64 @@
 import { getProducts } from "@/api/get-products";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeDollarSign, Search } from "lucide-react";
+import { BadgeDollarSign, Search, X } from "lucide-react";
+import { ProductLink } from "./product-link";
+import { useSearchParams } from "react-router-dom";
+import {useForm, Controller} from "react-hook-form"
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const productFilterSchema = z.object({
+  title: z.string().optional(),
+  status: z.string().optional()
+})
+
+type ProductFilterSchema = z.infer<typeof productFilterSchema>
 
 export function Products() {
-  const {data: products} = useQuery({
-    queryKey: ["products"],
-    queryFn: () => getProducts
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const status = searchParams.get("status")
+  const title = searchParams.get("title")
+
+  const {register, handleSubmit, control, reset} = useForm<ProductFilterSchema>({
+    resolver: zodResolver(productFilterSchema),
+    defaultValues: {
+      status: status ?? "",
+      title: title ?? ""
+    }
+  })
+
+  function handleClearFilterStatus() {
+    setSearchParams((state) => {
+      state.delete("status")
+      return state
+    })
+    reset({
+      status: ""
+    })
+  }
+
+  function handleFilter({status, title}: ProductFilterSchema){
+    setSearchParams((state) => {
+      if (title) {
+        state.set("title", title)
+      } else {
+        state.delete("title")
+      }
+
+      if (status) {
+        state.set("status", status)
+      } else {
+        state.delete("status")
+      }
+
+      return state
+    })
+  }
+
+  const {data: result} = useQuery({
+    queryKey: ["products", status, title],
+    queryFn: () => getProducts({status, title})
   })
   return (
     <div className="max-w-5xl m-auto ">
@@ -14,7 +67,7 @@ export function Products() {
         <span className="text-gray-300 text-sm font-light">Acesse e gerencie a sua lista de produtos á venda</span>  
       </div>
       <div className="grid grid-cols-3 gap-6">
-          <form action="" className="gap-5 flex flex-col sticky top-5 col-span-1 bg-white rounded-lg p-6 h-fit">
+          <form action="" onSubmit={handleSubmit(handleFilter)} className="gap-5 flex flex-col sticky top-5 col-span-1 bg-white rounded-lg p-6 h-fit">
             <label className="text-gray-300 text-xl font-bold">Filtrar</label>
             <div className=" bg-transparent py-2 border-b-2 flex gap-2 w-full group focus-within:text-orange-base">
               <Search className="text-gray-200 group-focus-within:text-orange-base"/>
@@ -25,83 +78,46 @@ export function Products() {
               caret-orange-base
               outline-none w-full
               "
+              {...register("title")}
               />
             </div>
-            <div className=" bg-transparent py-2 border-b-2 flex items-center gap-2 w-full group focus-within:text-orange-base">
-              <BadgeDollarSign className="text-gray-200 group-focus-within:text-orange-base"/>
-              <select className="py-2  flex gap-2 w-full text-gray-200">
-                    <option value="noValue" disabled selected>Status</option>
-                    <option value="available">Anunciado</option>
-                    <option value="sold">Vendido</option>
-                    <option value="canceled">Cancelado</option>
-              </select>
-            </div>
+
+            <Controller
+              name="status"
+              control={control}
+              render={({field: {name, onChange, value, disabled}}) => {
+                return(
+                  <div className="group flex items-center focus-within:text-orange-base">
+                    <BadgeDollarSign className="text-gray-200 group-focus-within:text-orange-base"/>
+                    <select 
+                      name={name}
+                      onChange={onChange}
+                      value={value}
+                      disabled={disabled}
+                      className="text-gray-200  bg-transparent py-2 border-b-2 flex items-center gap-2 w-full ">
+                          <option value="" disabled selected>Status</option>
+                          <option value="available">Anunciado</option>
+                          <option value="sold">Vendido</option>
+                          <option value="cancelled">Cancelado</option>
+                    </select>
+                    <button className="bg-shape rounded-full aspect-square p-1 flex items-center" type="button" onClick={handleClearFilterStatus}>
+                      <X width={15} height={15}/>
+                    </button>
+                  </div>
+                )
+              }}
+            />
+
             <button className="text-center rounded-lg bg-orange-base hover:bg-orange-dark border-transparent text-white p-2 w-full">
               Aplicar filtro
             </button>
           </form>
         <div className="col-span-2 grid grid-cols-2 gap-4">
 
-          {products && products.}
-          <div className=" bg-white rounded-xl p-1 max-w-fit max-h-fit hover:outline-blue-base outline">
-            <div className="relative">
-              <div className="absolute top-2 right-2 flex gap-2">
-                <span className="rounded-full text-white px-3 bg-blue-dark ">anunciado</span>
-                <span className="rounded-full text-white px-3 bg-gray-300">móvel</span>
-              </div>
-              <img src="../src/assets/product-image.png" className="rounded-xl w-full h-40 " alt="" />
-            </div>
-            <div className="text-gray-400 font-bold m-3 flex justify-between">
-              <span>Sofá</span>
-              <span>€ 200,00</span>
-            </div>
-            <p className="text-gray-300 m-3 line-clamp-2">Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado. Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado. Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado.Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado. Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado.</p>
-          </div>
-
-          <div className=" bg-white rounded-xl p-1 max-w-fit max-h-fit">
-            <img src="../src/assets/product-image.png" className="rounded-xl w-full h-40" alt="" />
-            <div className="text-gray-400 font-bold m-3">
-              <span>Sofá</span>
-              <span>€ 200,00</span>
-            </div>
-            <p className="text-gray-300 m-3">Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado.</p>
-          </div>
-
-          <div className=" bg-white rounded-xl p-1 max-w-fit max-h-fit">
-            <img src="../src/assets/product-image.png" className="rounded-xl w-full h-40" alt="" />
-            <div className="text-gray-400 font-bold m-3">
-              <span>Sofá</span>
-              <span>€ 200,00</span>
-            </div>
-            <p className="text-gray-300 m-3">Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado.</p>
-          </div>
-
-          <div className=" bg-white rounded-xl p-1 max-w-fit max-h-fit">
-            <img src="../src/assets/product-image.png" className="rounded-xl w-full h-40" alt="" />
-            <div className="text-gray-400 font-bold m-3">
-              <span>Sofá</span>
-              <span>€ 200,00</span>
-            </div>
-            <p className="text-gray-300 m-3">Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado.</p>
-          </div>
-
-          <div className=" bg-white rounded-xl p-1 max-w-fit max-h-fit">
-            <img src="../src/assets/product-image.png" className="rounded-xl w-full h-40" alt="" />
-            <div className="text-gray-400 font-bold m-3">
-              <span>Sofá</span>
-              <span>€ 200,00</span>
-            </div>
-            <p className="text-gray-300 m-3">Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado.</p>
-          </div>
-
-          <div className=" bg-white rounded-xl p-1 max-w-fit max-h-fit">
-            <img src="../src/assets/product-image.png" className="rounded-xl w-full h-40" alt="" />
-            <div className="text-gray-400 font-bold m-3">
-              <span>Sofá</span>
-              <span>€ 200,00</span>
-            </div>
-            <p className="text-gray-300 m-3">Sofá revestido em couro legítimo, com estrutura em madeira maciça e pés em metal cromado.</p>
-          </div>
+          {result && 
+            result.products.map((product) => {
+              return <ProductLink key={product.id} products={product}/>
+            })}
 
         </div>
 

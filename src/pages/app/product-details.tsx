@@ -1,8 +1,23 @@
+import { getProductById } from "@/api/get-product-by-id";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Ban, Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { ProductStatus } from "./product-status";
 
 
 export function ProductDetails() {
+  const {id} = useParams()
+
+  if (!id) {
+    throw new Error("Product ID is required");
+  }
+  
+  const productId: string = id
+
+  const {data: result} = useQuery({
+    queryKey: ["product"],
+    queryFn: () => getProductById({ productId })
+  })
   return(
     <div className="flex flex-col gap-10 max-w-7xl m-auto">
       <div className="flex justify-between">
@@ -19,12 +34,12 @@ export function ProductDetails() {
       
       
       <div className=" flex gap-6 ">
-          <img src="../src/assets/product-detail-image.png" alt="" className="rounded-2xl w-[415px] h-[340px]"/>
+          <img src={result?.product.attachments[0].url ?? ""} alt="" className="rounded-2xl w-[415px] h-[340px]"/>
 
           <form action="" className="bg-white flex flex-col rounded-3xl p-8 flex-1 gap-6">
             <header className="flex justify-between items-center">
               <h3 className="text-gray-300 font-bold">Dados do produto</h3>
-              <span className="rounded-full text-white px-3 bg-blue-dark ">ANUNCIADO</span>
+              <ProductStatus status={result?.product.status ?? "sold"}/>
             </header>
             <div className="flex flex-col gap-6">
               <div className="flex w-full gap-5">
@@ -33,9 +48,10 @@ export function ProductDetails() {
                   <div className=" bg-transparent py-2 border-b-2 flex gap-2 w-full">
                     <input 
                     type="text" placeholder="Nome do produto"
-                    className="bg-transparent text-gray-200
-                    outline-none w-full
+                    className="bg-transparent placeholder-gray-200 text-gray-400
+                    outline-none w-full 
                     "
+                    value={result?.product.title ?? ""}
                     />
                   </div>
                 </div>
@@ -46,9 +62,10 @@ export function ProductDetails() {
                     <span className="text-gray-400 group-focus-within:text-orange-base">€</span> 
                     <input 
                     type="text" placeholder="0,00"
-                    className="bg-transparent text-gray-200
+                    className="bg-transparent placeholder-gray-200 text-gray-400
                     outline-none w-full
                     "
+                    value={(result?.product.priceInCents ?? 0)/100}
                     />
                   </div>
                 </div>
@@ -62,17 +79,19 @@ export function ProductDetails() {
                   <textarea 
                    placeholder="Escreva detalhes sobre o produto, tamanho, características"
                   className="group bg-transparent placeholder-gray-200
-                  text-gray-500
+                  text-gray-400
                   caret-orange-base
                   outline-none w-full
                   "
+                  value={result?.product.description ?? ""}
                   />
                 </div>
               </div>
 
               <div>
-                <select className="bg-transparent py-2 border-b-2 flex gap-2 w-full text-gray-200">
-                  <option value="noValue" disabled selected>Selecione</option>
+                <select className="bg-transparent py-2 border-b-2 flex gap-2 w-full placeholder-gray-200 text-gray-400 ">
+
+                  <option value={result?.product.category.slug ?? ""} selected>{result?.product.category.title ?? ""}</option>
                   <option value="opcao1">Brinquedo</option>
                   <option value="opcao2">Móvel</option>
                   <option value="opcao3">Papelaria</option>

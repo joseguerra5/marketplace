@@ -24,7 +24,7 @@ export const router = createBrowserRouter([
     children: [
       {path: "/dashboard", element: <Dashboard/>},
       {path: "/products", element: <Products/>},
-      {path: `/product/:ProductId`, element: <ProductDetails/>},
+      {path: `/products/:id`, element: <ProductDetails/>},
       {path: `/product/new`, element: <AddProduct/>},
 
   
