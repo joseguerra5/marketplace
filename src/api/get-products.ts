@@ -1,6 +1,6 @@
 import { api } from "../lib/axios"
 export interface GetOrdersQuery {
-  title?: string | null
+  search?: string | null
   status?: string | null
 }
 
@@ -35,8 +35,8 @@ export interface GetProductsResponse {
     }[];
 }
 export async function getProducts({
-  status, title
+  status, search
 }: GetOrdersQuery) {
-  const response = await api.get<GetProductsResponse>(`/products/me`, {params: {status, title}})
+  const response = await api.get<GetProductsResponse>(`/products/me`, {params: {status, search}})
   return response.data
 }

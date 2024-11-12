@@ -1,23 +1,77 @@
 import { getProductById } from "@/api/get-product-by-id";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Ban, Check } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { ProductStatus } from "./product-status";
+import {  changeProductStatus } from "@/api/change-product-status";
+import { GetProductsResponse } from "@/api/get-products";
 
 
 export function ProductDetails() {
-  const {id} = useParams()
+  const { id } = useParams()
 
   if (!id) {
     throw new Error("Product ID is required");
   }
-  
-  const productId: string = id
 
+  const productId: string = id
+  
+  const queryClient = useQueryClient()
+  
   const {data: result} = useQuery({
-    queryKey: ["product"],
+    queryKey: ["products", productId],
     queryFn: () => getProductById({ productId })
   })
+
+  function updateOrderStatusOnCache(id: string, status: ProductStatus) {
+    const productListCache = queryClient.getQueriesData<GetProductsResponse>({
+      queryKey: ["products"]
+    })
+
+    productListCache.forEach(([cacheKey, cacheData]) => {
+      if (!cacheData) {
+        console.log("sem dados em cache")
+        return
+      }
+
+      queryClient.setQueryData<GetProductsResponse>(cacheKey, {
+        ...cacheData,
+        products: cacheData.products.map((product) => {
+          if (product.id === id) {
+            return { ...product, status }
+          }
+          console.log("produto atualizado:",product)
+          console.log(id)
+          console.log(status)
+          return product
+        })
+      })
+    })
+  }
+
+  const {mutateAsync: cancelProductFn} = useMutation({
+    mutationFn: changeProductStatus,
+      async onSuccess(_, {id}) {
+        updateOrderStatusOnCache(id, "cancelled")
+      }
+
+  })
+
+  const {mutateAsync: soldProductFn} = useMutation({
+    mutationFn: changeProductStatus,
+      async onSuccess(_, {id}) {
+        updateOrderStatusOnCache(id, "sold")
+      }
+
+  })
+
+ 
+  
+  
+
+ 
+
+
   return(
     <div className="flex flex-col gap-10 max-w-7xl m-auto">
       <div className="flex justify-between">
@@ -27,8 +81,8 @@ export function ProductDetails() {
           <span className="text-gray-300 text-sm font-light">Gerencie as informações do produto cadastrado</span>  
         </div>
         <div className="flex gap-2 items-end">
-          <button className="text-orange-base flex gap-2 hover:text-orange-dark"><Check/> Marcar como vendido</button>
-          <button className="text-orange-base flex gap-2 hover:text-orange-dark"><Ban/> Desativar anúncio</button>
+          <button className="text-orange-base flex gap-2 hover:text-orange-dark" type="button" onClick={() => soldProductFn({id: productId, status: "sold"})}><Check/> Marcar como vendido</button>
+          <button className="text-orange-base flex gap-2 hover:text-orange-dark" type="button" onClick={() => cancelProductFn({id: productId, status: "cancelled"})}><Ban/> Desativar anúncio</button>
         </div>
       </div>
       

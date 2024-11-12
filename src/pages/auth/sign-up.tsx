@@ -27,6 +27,22 @@ export function SignUp() {
   const navigate = useNavigate()
   const [inputType, setInputType] = useState("password")
 
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // verifica se o evento de change tem um arquivo
+    const file = e.target.files ? e.target.files[0] : null;
+
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        // define o url da imagem para visualizar
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleShowPassword = () => setInputType("text")
   const handleHidePassword = () => setInputType("password")
 
@@ -90,16 +106,35 @@ export function SignUp() {
 
         <form action="" className="flex flex-col gap-5" onSubmit={handleSubmit(handleSignUp)}>
           <h2 className="text-gray-500 font-bold text-lg ">Perfil</h2>
-          <div className=" rounded-lg bg-shape size-fit">
-            <label htmlFor="avatarId" className="w-full h-full  justify-center items-center flex p-11">
-              <ImageUp className="text-orange-base " width={32}/>
-              <input type="file" 
-              id="avatarId" 
-              className="hidden"
-              {...register("avatar")}
-              />
+          <div className="rounded-lg bg-shape size-fit w-20 h-20">
 
-            </label>
+            {imagePreview ? ( 
+                 <label htmlFor="avatarId" className="group w-full h-full  justify-center items-center flex overflow-hidden rounded-lg relative">
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 "></div>
+                  <ImageUp className="absolute z-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" width={32}/>
+                  <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+                  <input type="file" 
+                  id="avatarId" 
+                  className="hidden"
+                  {...register("avatar")}
+                  onChange={handleImageChange}
+                  />
+                  
+
+                </label>
+            ) : (
+                  <label htmlFor="avatarId" className="group w-full h-full  justify-center items-center flex relative">
+                    <ImageUp className="text-orange-base absolute group-hover:text-orange-dark" width={24}/>
+                    <input type="file" 
+                    id="avatarId" 
+                    className="hidden"
+                    {...register("avatar")}
+                    onChange={handleImageChange}
+                    />
+                  </label>
+                )}
+
+            
             {errors.avatar && <span className="flex  items-center  gap-2 text-danger  text-xs "><CircleAlert width={16}/>{errors.avatar.message}</span>}
           </div>
 

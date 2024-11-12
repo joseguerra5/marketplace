@@ -7,6 +7,11 @@ import { BadgeDollarSign, Calendar, Loader2, Store, UsersRound } from "lucide-re
 import { useMemo } from "react";
 import { CartesianGrid, Line, ResponsiveContainer, XAxis, LineChart, YAxis } from "recharts";
 
+export interface GetViewsPerDayResponse {
+  date: string
+  amount: number
+}
+
 export function Dashboard() {
   const {data: productsSold} = useQuery({
     queryKey: ["productsSold"],
@@ -27,8 +32,6 @@ export function Dashboard() {
     queryKey: ["viewsPerDay"],
     queryFn: () => getViewsPerDay(),
   })
-
-  console.log(viewsPerDay)
 
   const chartData = useMemo(() => {
     return viewsPerDay?.viewsPerDay.map((chartItem) => {
@@ -79,14 +82,14 @@ export function Dashboard() {
           </div>
         </div>
         
-        <div className="bg-white rounded-3xl flex-1">
-          <header>
+        <div className="bg-white rounded-3xl flex-1 p-6 flex flex-col gap-4">
+          <header className="flex justify-between items-center">
             <strong>Visitantes</strong>
-            <strong><Calendar className="text-blue-light"/> 25 DE JUNho - 25 DE Julho</strong>
+            <strong className="flex items-center"><Calendar className="text-blue-light"/> 25 DE JUNho - 25 DE Julho</strong>
           </header>
-          <div>
+          <div className="">
             {viewsPerDay ? (
-              <ResponsiveContainer width="100%" height={240}>
+              <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   style={{fontSize: 12}}
                   data={chartData}
@@ -95,10 +98,11 @@ export function Dashboard() {
                 <YAxis  
                   axisLine={false}
                   tickLine={false}
-                  width={80}
+                  width={25}
                 />
                 <CartesianGrid
                   vertical={false}
+                  
                 />
                 <Line
                   type="monotone"

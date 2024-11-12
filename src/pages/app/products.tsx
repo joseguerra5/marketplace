@@ -1,5 +1,5 @@
 import { getProducts } from "@/api/get-products";
-import { useQuery } from "@tanstack/react-query";
+import {  useQuery } from "@tanstack/react-query";
 import { BadgeDollarSign, Search, X } from "lucide-react";
 import { ProductLink } from "./product-link";
 import { useSearchParams } from "react-router-dom";
@@ -7,8 +7,9 @@ import {useForm, Controller} from "react-hook-form"
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+
 const productFilterSchema = z.object({
-  title: z.string().optional(),
+  search: z.string().optional(),
   status: z.string().optional()
 })
 
@@ -17,14 +18,16 @@ type ProductFilterSchema = z.infer<typeof productFilterSchema>
 export function Products() {
   const [searchParams, setSearchParams] = useSearchParams()
 
+
+
   const status = searchParams.get("status")
-  const title = searchParams.get("title")
+  const search = searchParams.get("search")
 
   const {register, handleSubmit, control, reset} = useForm<ProductFilterSchema>({
     resolver: zodResolver(productFilterSchema),
     defaultValues: {
       status: status ?? "",
-      title: title ?? ""
+      search: search ?? ""
     }
   })
 
@@ -38,12 +41,12 @@ export function Products() {
     })
   }
 
-  function handleFilter({status, title}: ProductFilterSchema){
+  function handleFilter({status, search}: ProductFilterSchema){
     setSearchParams((state) => {
-      if (title) {
-        state.set("title", title)
+      if (search) {
+        state.set("search", search)
       } else {
-        state.delete("title")
+        state.delete("search")
       }
 
       if (status) {
@@ -57,9 +60,11 @@ export function Products() {
   }
 
   const {data: result} = useQuery({
-    queryKey: ["products", status, title],
-    queryFn: () => getProducts({status, title})
+    queryKey: ["products", status, search],
+    queryFn: () => getProducts({status, search})
   })
+
+  
   return (
     <div className="max-w-5xl m-auto ">
       <div className="my-10">
@@ -78,7 +83,7 @@ export function Products() {
               caret-orange-base
               outline-none w-full
               "
-              {...register("title")}
+              {...register("search")}
               />
             </div>
 

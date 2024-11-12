@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 const signInForm = z.object({
   email: z.string().email({message: "Insira um email válido"}),
-  password: z.string().length(6, {message: "A senha deve ter no mínimo 6 dígitos"}),
+  password: z.string().min(6, {message: "A senha deve ter no mínimo 6 dígitos"}),
 })
 
 type SignInForm = z.infer<typeof signInForm>
@@ -41,13 +41,9 @@ export function SignIn() {
       await authenticate ({email: data.email, password: data.password})
       toast.success("Log in realizado com sucesso, aproveite o dashboard")
       navigate("/dashboard")
-      console.log(data)
-      console.log("Deu tudo certo")
     } catch (e) {
       toast.error("Algo deu errado, tente novamente mais tarde")
-      console.log(data)
       console.log(e)
-      console.log("errou")
     }
   }
 
@@ -69,7 +65,7 @@ export function SignIn() {
               <input 
               type="text" 
               placeholder="Digite seu e-mail"
-              className="bg-transparent text-gray-200
+              className="bg-transparent text-gray-400 placeholder:text-gray-200
               outline-none w-full"
               id="email"
               {...register("email", {required: true})}
@@ -84,7 +80,7 @@ export function SignIn() {
               {!errors.password ? (<KeyRound className="text-gray-200 group-focus-within:text-orange-base"/>) : (<KeyRound className="text-danger"/>)}
               <input 
               type={inputType} placeholder="Digite seu e-mail"
-              className="bg-transparent text-gray-200
+              className="bg-transparent text-gray-400 placeholder:text-gray-200
               outline-none w-full"
               id="password"
               {...register("password", {required: true})}
@@ -96,7 +92,7 @@ export function SignIn() {
               type="button"
               >
 
-                <Eye className="text-gray-200"/>
+                <Eye className="text-gray-200 hover:text-orange-base"/>
               </button>
             </div>
             {errors.password  && <span className="flex  items-center  gap-2 text-danger  text-xs "><CircleAlert width={16}/>{errors.password .message}</span>}
