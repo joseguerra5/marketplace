@@ -43,10 +43,8 @@ export async function signUp({
 export async function signUpFileUpload({ 
   avatars 
 }: SignUpBodyImage): Promise<SignUpImageResponse> {
-  console.log(avatars)
   const attachments = await api.post<SignUpImageResponse>("/attachments", 
     avatars,
   )
-  console.log(attachments.data)
   return attachments.data
 }

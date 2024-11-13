@@ -60,7 +60,7 @@ export function SignUp() {
 
   async function handleSignUp(data: SignUpForm) {
     try {
-      console.log("Esse é o data.avatar", data.avatar)
+      console.log(data)
       if (data.avatar?.length && data.avatar.length > 0){
         const avatars = new FormData()
         avatars.append("files", data.avatar[0])
@@ -72,7 +72,7 @@ export function SignUp() {
 
         const avatarId = uploadedSignUpFile.attachments[0].id
 
-        await await registerSeller ({
+        await registerSeller ({
           email: data.email, 
           password: data.password, 
           avatarId,
