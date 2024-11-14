@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { addProduct, productFileUpload } from "@/api/add-product";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { getCategories } from "@/api/get-list-categories";
+import { useQuery } from "@tanstack/react-query";
 
 const productForm = z.object({
   title: z.string(),
@@ -29,6 +31,12 @@ export function AddProduct() {
   const { register, handleSubmit, control, clearErrors, setValue, formState: {isSubmitting, errors}} = useForm<ProductForm>({
     resolver: zodResolver(productForm),
   })
+
+  const {data: categories} = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => getCategories()
+  })
+
 
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,8 +68,6 @@ export function AddProduct() {
           attachment
         })
 
-        
-
         const attachmentId = uploadedProductFile.attachments[0].id
         console.log("console do attachmentID:", attachmentId)
 
@@ -72,15 +78,14 @@ export function AddProduct() {
           priceInCents: data.priceInCents,
           title: data.title
         })
+
+        console.log("console do productResponse:", productResponse)
           toast.success("Produto cadastrado com sucesso", {
             action: {
               label: "Detalhe do produto",
               onClick: () => navigate(`/products/${productResponse.product.id}`),
             },
           })
-        } else {
-          console.log("attachmentsIds está vazio ou indefinido");
-          console.log(data);
         }
         
     } catch (e)  {
@@ -211,14 +216,10 @@ export function AddProduct() {
                         disabled={disabled}
                         >
                         <option value="noValue" disabled selected>Selecione</option>
-                        <option value="2f01b979-a025-477d-b564-1f5f3900dd07">Eletrônicos</option>
-                        <option value="9b471a95-14d8-4f0b-8d31-23dc8a850852">Esportes</option>
-                        <option value="fd681739-4168-407e-b9db-f0af953147b3">Livros</option>
-                        <option value="f474976f-9b69-493e-996e-a7eb302ba1d1">Moda</option>
-                        <option value="0b943bc2-26c5-4ab0-ad63-b3e9acb3a77e">Eletrodomésticos</option>
-                        <option value="7f9423d0-3080-46a6-a2aa-d5bf3d4e58e2">Decoração</option>
-                        <option value="0951c5f3-761e-4843-b9de-d4ca2de870af">Móveis</option>
-                        <option value="0951c5f3-761e-4843-b9de-d4ca2de870af">Móveis</option>
+                        {categories && 
+                          categories.categories.map((categorie) => {
+                            return <option value={categorie.id} key={categorie.id}>{categorie.slug}</option>
+                          })}
                       </select>
                     </div>
                     {errors.categoryId && <span className="flex  items-center  gap-2 text-danger  text-xs "><CircleAlert width={16}/>{errors.categoryId.message}</span>}

@@ -29,6 +29,10 @@ export function SignUp() {
 
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
+  const { register, handleSubmit, setValue, clearErrors, formState: {isSubmitting, errors}} = useForm<SignUpForm>({
+    resolver: zodResolver(signUpForm)
+  })
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // verifica se o evento de change tem um arquivo
     const file = e.target.files ? e.target.files[0] : null;
@@ -40,15 +44,19 @@ export function SignUp() {
         setImagePreview(reader.result as string)
       }
       reader.readAsDataURL(file)
+
+      const fileList = new DataTransfer();
+      fileList.items.add(file);
+
+      setValue("avatar", fileList.files);  // Array com o único arquivo selecionado
+      clearErrors("avatar");
     }
   }
 
   const handleShowPassword = () => setInputType("text")
   const handleHidePassword = () => setInputType("password")
 
-  const { register, handleSubmit, formState: {isSubmitting, errors}} = useForm<SignUpForm>({
-    resolver: zodResolver(signUpForm)
-  })
+ 
 
   const { mutateAsync: registerSeller } = useMutation({
     mutationFn: signUp,
@@ -67,8 +75,6 @@ export function SignUp() {
         const uploadedSignUpFile = await uploadImageFn({
           avatars
         })
-        
-        console.log("Resposta da API:", uploadedSignUpFile);
 
         const avatarId = uploadedSignUpFile.attachments[0].id
 
@@ -86,10 +92,7 @@ export function SignUp() {
               onClick: () => navigate(`/sign-in?email=${data.email}`),
             },
           })
-        }
-
-
-      
+        }   
     } catch (e)  {
       toast.error(`o erro foi ${e}`)
       //console.log(data)

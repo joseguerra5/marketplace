@@ -1,14 +1,15 @@
 import { getProductById } from "@/api/get-product-by-id";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Ban, Check, CircleAlert, ImageUp } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ProductStatus } from "./product-status";
 import {  changeProductStatus } from "@/api/change-product-status";
-import { GetProductsResponse } from "@/api/get-products";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {Controller, useForm} from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { getCategories } from "@/api/get-list-categories";
 
 
 const productForm = z.object({
@@ -43,7 +44,10 @@ export function ProductDetails() {
     queryFn: () => getProductById({ productId })
   })
 
-  console.log(result)
+  const {data: categories} = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => getCategories()
+  })
 
 
   const { register, handleSubmit, control, clearErrors, setValue, reset, formState: {errors}} = useForm<ProductForm>({
@@ -56,7 +60,6 @@ export function ProductDetails() {
     } : undefined,
   })
 
-  console.log(result)
 
   const { id: attachmentId } = result?.product?.attachments?.[0] || {};
 
@@ -80,47 +83,37 @@ export function ProductDetails() {
   
   const queryClient = useQueryClient()
   
-  
-
-  function updateOrderStatusOnCache(id: string, status: ProductStatus) {
-    const productListCache = queryClient.getQueriesData<GetProductsResponse>({
-      queryKey: ["products"]
-    })
-
-    productListCache.forEach(([cacheKey, cacheData]) => {
-      if (!cacheData) {
-        console.log("sem dados em cache")
-        return
-      }
-
-      queryClient.setQueryData<GetProductsResponse>(cacheKey, {
-        ...cacheData,
-        products: cacheData.products.map((product) => {
-          if (product.id === id) {
-            return { ...product, status }
-          }
-          console.log("produto atualizado:",product)
-          console.log(id)
-          console.log(status)
-          return product
-        })
-      })
-    })
-  }
 
   const {mutateAsync: cancelProductFn} = useMutation({
     mutationFn: changeProductStatus,
-      async onSuccess(_, {id}) {
-        updateOrderStatusOnCache(id, "cancelled")
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+        queryClient.invalidateQueries({ queryKey: ["productsAvailable"] });
+        queryClient.invalidateQueries({ queryKey: ["productsSold"] });
+        toast.success('Produto alterado com sucesso!')
       }
 
   })
 
   const {mutateAsync: soldProductFn} = useMutation({
     mutationFn: changeProductStatus,
-      async onSuccess(_, {id}) {
-        updateOrderStatusOnCache(id, "sold")
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["productsAvailable"] });
+      queryClient.invalidateQueries({ queryKey: ["productsSold"] });
+      toast.success('Produto alterado com sucesso!')
+    }
+
+  })
+
+  const {mutateAsync: availableProductFn} = useMutation({
+    mutationFn: changeProductStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["productsAvailable"] });
+      queryClient.invalidateQueries({ queryKey: ["productsSold"] });
+      toast.success('Produto alterado com sucesso!')
+    }
 
   })
 
@@ -154,13 +147,13 @@ export function ProductDetails() {
     <div className="flex flex-col gap-10 max-w-7xl m-auto">
       <div className="flex justify-between">
         <div className="flex flex-col gap-2 mt-8">
-          <Link to="/products" className="text-orange-base flex hover:text-orange-dark"><ArrowLeft/> Voltar</Link>
+          <button onClick={() => navigate(-1)} className="text-orange-base flex hover:text-orange-dark"><ArrowLeft/> Voltar</button>
           <h3 className="text-gray-500 text-3xl font-bold">Editar produto</h3>
           <span className="text-gray-300 text-sm font-light">Gerencie as informações do produto cadastrado</span>  
         </div>
         <div className="flex gap-2 items-end">
-          {result?.product.status === "available" ? <button className="text-orange-base flex gap-2 hover:text-orange-dark" type="button" onClick={() => soldProductFn({id: productId, status: "sold"})}><Check/> Marcar como vendido</button> : <button className="text-orange-base flex gap-2 hover:text-orange-dark" type="button" onClick={() => soldProductFn({id: productId, status: "available"})}><Check/> Marcar como disponível</button>}
-          <button className="text-orange-base flex gap-2 hover:text-orange-dark disabled:text-orange-base/60 disabled:cursor-not-allowed" type="button" disabled={result?.product.status === "sold"} onClick={() => cancelProductFn({id: productId, status: "cancelled"})}><Ban/> Desativar anúncio</button>
+          {result?.product.status === "available" ? <button className="text-orange-base flex gap-2 hover:text-orange-dark" type="button" onClick={() => soldProductFn({id: productId, status: "sold"})}><Check/> Marcar como vendido</button> : <button className="text-orange-base flex gap-2 hover:text-orange-dark" type="button" onClick={() => availableProductFn({id: productId, status: "available"})}><Check/> Marcar como disponível</button>}
+          <button className="text-orange-base flex gap-2 hover:text-orange-dark disabled:text-orange-base/60 disabled:cursor-not-allowed" type="button" disabled={result?.product.status === "sold" || result?.product.status === "cancelled"} onClick={() => cancelProductFn({id: productId, status: "cancelled"})}><Ban/> Desativar anúncio</button>
         </div>
       </div>
       
@@ -273,14 +266,12 @@ export function ProductDetails() {
                           onChange={onChange}
                           value={value}
                           disabled={disabled}
+                          defaultValue={result?.product.category.id}
                           >                        
-                          <option value="2f01b979-a025-477d-b564-1f5f3900dd07">Eletrônicos</option>
-                          <option value="9b471a95-14d8-4f0b-8d31-23dc8a850852">Esportes</option>
-                          <option value="fd681739-4168-407e-b9db-f0af953147b3">Livros</option>
-                          <option value="f474976f-9b69-493e-996e-a7eb302ba1d1">Moda</option>
-                          <option value="0b943bc2-26c5-4ab0-ad63-b3e9acb3a77e">Eletrodomésticos</option>
-                          <option value="7f9423d0-3080-46a6-a2aa-d5bf3d4e58e2">Decoração</option>
-                          <option value="0951c5f3-761e-4843-b9de-d4ca2de870af">Móveis</option>
+                          {categories && 
+                          categories.categories.map((categorie) => {
+                            return <option value={categorie.id} key={categorie.id}>{categorie.slug}</option>
+                          })}
                         </select>
                       </div>
                       {errors.categoryId && <span className="flex  items-center  gap-2 text-danger  text-xs "><CircleAlert width={16}/>{errors.categoryId.message}</span>}

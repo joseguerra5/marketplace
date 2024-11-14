@@ -5,7 +5,7 @@ export interface AddProductBody {
   categoryId: string,
   description: string,
   priceInCents: number,
-  attachmentsIds: string[]
+  attachmentsIds: string[] | null
 }
 
 export interface AddProductImage {
@@ -26,7 +26,7 @@ interface UploadProductResponse {
     title: string,
     description: string,
     priceInCents: number,
-    status: "available",
+    status: string,
     owner: {
       id: string,
       name: string,
@@ -53,16 +53,18 @@ interface UploadProductResponse {
 export async function addProduct({
   attachmentsIds, categoryId, description, priceInCents, title
 }: AddProductBody) {
+    console.log(attachmentsIds, categoryId, description, priceInCents, title)
     const response = await api.post<UploadProductResponse>(`/products`, 
     {attachmentsIds, categoryId, description, priceInCents, title} )
+    console.log("data do arquivoaaa",response)
     return response.data
 }
 
 export async function productFileUpload({ 
   attachment 
 }: AddProductImage): Promise<AddProductImageResponse> {
-  const response = await api.post<AddProductImageResponse>("/attachments", 
+  const attachments = await api.post<AddProductImageResponse>("/attachments", 
     attachment,
   )
-  return response.data
+  return attachments.data
 }
