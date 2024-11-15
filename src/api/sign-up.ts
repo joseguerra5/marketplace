@@ -1,50 +1,61 @@
-import { api } from "../lib/axios"
+import { api } from "../lib/axios";
 
 export interface SignUpBody {
-  email: string,
-  password: string,
-  passwordConfirmation: string,
-  avatarId: string
-  name: string,
-  phone: string
+  email: string;
+  password: string;
+  passwordConfirmation: string;
+  avatarId: string;
+  name: string;
+  phone: string;
 }
 
 export interface SignUpBodyImage {
-  avatars: FormData
+  avatars: FormData;
 }
 
 export interface SignUpImageResponse {
-  attachments: 
-    {
-      "id": string,
-      "url": string
-    }[]
+  attachments: {
+    id: string;
+    url: string;
+  }[];
 }
 
 interface UploadImageResponse {
-  id: string,
-  name: string
-  phone: string,
-  email: string,
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
   avatar: {
-    id: string
-    url: string
-  }[]
- }
-
-export async function signUp({
-  email, password, passwordConfirmation, avatarId, name, phone
-}: SignUpBody) {
-    const response = await api.post<UploadImageResponse>(`/sellers`, 
-    {email, password, passwordConfirmation, name, phone, avatarId} )
-    return response.data
+    id: string;
+    url: string;
+  }[];
 }
 
-export async function signUpFileUpload({ 
-  avatars 
+export async function signUp({
+  email,
+  password,
+  passwordConfirmation,
+  avatarId,
+  name,
+  phone,
+}: SignUpBody) {
+  const response = await api.post<UploadImageResponse>(`/sellers`, {
+    email,
+    password,
+    passwordConfirmation,
+    name,
+    phone,
+    avatarId,
+  });
+  return response.data;
+}
+
+export async function signUpFileUpload({
+  avatars,
 }: SignUpBodyImage): Promise<SignUpImageResponse> {
-  const attachments = await api.post<SignUpImageResponse>("/attachments", 
+  const attachments = await api.post<SignUpImageResponse>(
+    "/attachments",
     avatars,
-  )
-  return attachments.data
+  );
+  return attachments.data;
 }

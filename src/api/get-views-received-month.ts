@@ -1,10 +1,12 @@
-import { api } from "../lib/axios"
+import { api } from "../lib/axios";
 
 interface GetSellerViewsResponse {
- amount: number
+  amount: number;
 }
 
 export async function getSellerViews() {
-  const response = await api.get<GetSellerViewsResponse>("/sellers/metrics/views")
-  return response.data
+  const response = await api.get<GetSellerViewsResponse>(
+    "/sellers/metrics/views",
+  );
+  return response.data;
 }

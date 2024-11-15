@@ -1,10 +1,12 @@
-import { api } from "../lib/axios"
+import { api } from "../lib/axios";
 
 interface GetProductsAvailableResponse {
- amount: number
+  amount: number;
 }
 
 export async function getProductsAvailable() {
-  const response = await api.get<GetProductsAvailableResponse>("/sellers/metrics/products/available")
-  return response.data
+  const response = await api.get<GetProductsAvailableResponse>(
+    "/sellers/metrics/products/available",
+  );
+  return response.data;
 }
