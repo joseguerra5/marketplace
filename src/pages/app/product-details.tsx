@@ -1,6 +1,6 @@
 import { getProductById } from "@/api/get-product-by-id";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Check, CircleAlert, ImageUp } from "lucide-react";
+import { ArrowLeft, Ban, Check, CircleAlert, ImageUp, Loader2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProductStatus } from "./product-status";
 import { changeProductStatus } from "@/api/change-product-status";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { getCategories } from "@/api/get-list-categories";
 import { productFileUpload } from "@/api/add-product";
 import { editProductById } from "@/api/put-product-by-id";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const productForm = z.object({
   title: z.string(),
@@ -46,12 +47,12 @@ export function ProductDetails() {
 
   const productId: string = id;
 
-  const { data: result } = useQuery({
+  const { data: result, isLoading: isLoadingProduct } = useQuery({
     queryKey: ["products", productId],
     queryFn: () => getProductById({ productId }),
   });
 
-  const [imagePreview, setImagePreview] = useState<string[] | [string] | null>(
+  const [imagePreview, setImagePreview] = useState<string[] | string | null>(
     result?.product.attachments?.[0]?.url
       ? [result.product.attachments[0].url]
       : null,
@@ -61,6 +62,30 @@ export function ProductDetails() {
     queryKey: ["categories"],
     queryFn: () => getCategories(),
   });
+
+  function formatCurrencyNumber(currency: number) {
+    const numericValue = parseFloat(currency.toString().replace(/\D/g, '')) / 100;
+  
+    return parseFloat(numericValue.toFixed(2));
+  }
+
+  const priceformated = formatCurrencyNumber(result?.product.priceInCents ?? 0)
+
+  const [currency, setCurrency] = useState("");
+
+  function formatCurrency(event: React.ChangeEvent<HTMLInputElement>) {
+    let inputValue = event.target.value
+    inputValue = inputValue.replace(/\D/g, '')
+
+    const numericValue = parseFloat(inputValue.toString().replace(/\D/g, '')) / 100;
+  
+
+    setCurrency(numericValue)
+  }
+
+  
+
+
 
   const {
     register,
@@ -72,17 +97,6 @@ export function ProductDetails() {
     formState: { errors },
   } = useForm<ProductForm>({
     resolver: zodResolver(productForm),
-    defaultValues: result
-      ? {
-          categoryId: result?.product.category.id,
-          description: result?.product.description ?? "",
-          priceInCents: result?.product.priceInCents,
-          title: result?.product.title ?? "",
-          attachmentsIds: result?.product.attachments?.[0]?.id
-            ? [result.product.attachments[0].id]
-            : [],
-        }
-      : undefined,
   });
 
   useEffect(() => {
@@ -90,12 +104,12 @@ export function ProductDetails() {
       reset({
         categoryId: result.product.category.id,
         description: result.product.description ?? "",
-        priceInCents: result.product.priceInCents,
+        priceInCents: priceformated,
         title: result.product.title ?? "",
         attachmentsIds: [result.product.attachments[0].id],
       });
     }
-  }, [result, reset]);
+  }, [result, reset, priceformated]);
 
   const queryClient = useQueryClient();
 
@@ -164,6 +178,8 @@ export function ProductDetails() {
       toast.error("Algo de errado aconteceu, tente novamente mais tarde");
     }
   }
+
+  
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // verifica se o evento de change tem um arquivo
@@ -242,54 +258,34 @@ export function ProductDetails() {
           className="flex gap-6"
           onSubmit={handleSubmit(handleEditProduct)}
         >
-          <div className="rounded-xl bg-shape w-[415px] h-[340px]">
-            {imagePreview ? (
-              <label
-                htmlFor="attachmentsIds"
-                className="group w-full h-full  justify-center items-center flex overflow-hidden rounded-lg relative"
-              >
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 "></div>
-                <div className="absolute flex items-center flex-col z-10 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ImageUp width={40} height={40} />
-                  <span className="text-sm">Selecione a imagem do produto</span>
-                </div>
-                <img
-                  src={imagePreview[0]}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-                <input
-                  type="file"
-                  id="attachmentsIds"
-                  className="hidden"
-                  {...register("attachmentsIds")}
-                  onChange={handleImageChange}
-                />
-              </label>
+          <div className="rounded-xl bg-shape w-[415px] h-[340px] flex items-center justify-center">
+            {isLoadingProduct ? (
+              <Loader2 className="animate-spin self-center"/>
             ) : (
               <label
-                htmlFor="attachmentsIds"
-                className="group w-full h-full  justify-center items-center flex overflow-hidden rounded-lg relative"
-              >
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 "></div>
-                <div className="absolute flex items-center flex-col z-10 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ImageUp width={40} height={40} />
-                  <span className="text-sm">Selecione a imagem do produto</span>
-                </div>
-                <img
-                  src={result?.product.attachments[0].url ?? ""}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-                <input
-                  type="file"
-                  id="attachmentsIds"
-                  className="hidden"
-                  {...register("attachmentsIds")}
-                  onChange={handleImageChange}
-                />
-              </label>
+                  htmlFor="attachmentsIds"
+                  className="group w-full h-full  justify-center items-center flex overflow-hidden rounded-lg relative"
+                >
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 "></div>
+                  <div className="absolute flex items-center flex-col z-10 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ImageUp width={40} height={40} />
+                    <span className="text-sm">Selecione a imagem do produto</span>
+                  </div>
+                  <img
+                    src={imagePreview ? imagePreview : result?.product.attachments[0].url ?? undefined}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                  <input
+                    type="file"
+                    id="attachmentsIds"
+                    className="hidden"
+                    {...register("attachmentsIds")}
+                    onChange={handleImageChange}
+                  />
+                </label>
             )}
+
             {errors.attachmentsIds && (
               <span className="flex  items-center  gap-2 text-danger  text-xs ">
                 <CircleAlert width={16} />
@@ -300,7 +296,8 @@ export function ProductDetails() {
           <div className="bg-white flex flex-col rounded-3xl p-8 flex-1 gap-6">
             <header className="flex justify-between items-center">
               <h3 className="text-gray-300 font-bold">Dados do produto</h3>
-              <ProductStatus status={result?.product.status ?? "sold"} />
+              {isLoadingProduct ? (<Skeleton className="w-20 h-4 rounded-full"/>) : (<ProductStatus status={result?.product.status ?? "sold"} />)}
+              
             </header>
             <div className="flex flex-col gap-6">
               <div className="flex w-full gap-5">
@@ -343,10 +340,12 @@ export function ProductDetails() {
                     <input
                       type="text"
                       placeholder="0,00"
+                      value={currency}
                       className="bg-transparent placeholder-gray-200 text-gray-400
-                    outline-none w-full
-                    "
+                      outline-none w-full
+                      "
                       {...register("priceInCents", { valueAsNumber: true })}
+                      onChange={formatCurrency}
                     />
                   </div>
                   {errors.priceInCents && (
@@ -429,7 +428,7 @@ export function ProductDetails() {
                 <button
                   className="rounded-lg border border-orange-base text-orange-base p-2 w-full hover:text-orange-dark hover:border-orange-dark"
                   type="button"
-                  onClick={() => navigate("/products")}
+                  onClick={() => navigate(-1)}
                 >
                   Cancelar
                 </button>

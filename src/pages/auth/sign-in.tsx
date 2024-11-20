@@ -1,4 +1,4 @@
-import { ArrowRight, CircleAlert, Eye, KeyRound, Mail } from "lucide-react";
+import { ArrowRight, CircleAlert, Eye, KeyRound, Loader2, Mail } from "lucide-react";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { signIn } from "../../api/sign-in";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 
 const signInForm = z.object({
   email: z.string().email({ message: "Insira um email válido" }),
@@ -40,17 +41,25 @@ export function SignIn() {
   const { mutateAsync: authenticate } = useMutation({
     mutationFn: signIn,
   });
+
   async function handleSignIn(data: SignInForm) {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
     try {
       await authenticate({ email: data.email, password: data.password });
       toast.success("Log in realizado com sucesso, aproveite o dashboard");
       navigate("/dashboard");
     } catch (e) {
-      toast.error("Algo deu errado, tente novamente mais tarde");
-      console.log(e);
+      if (isAxiosError(e)) {
+        const status = e.response?.status;
+
+        if (status === 403) {
+          toast.error("Email ou senha inválido, por favor verificar as informações");
+        } 
+      } else {
+        toast.error("Algo deu errado, tente novamente mais tarde!");
+      }
+      }
     }
-  }
+  
 
   return (
     <div className="rounded-3xl bg-white">
@@ -135,12 +144,12 @@ export function SignIn() {
           </div>
 
           <button
-            className="justify-between flex rounded-lg bg-orange-base border-transparent hover:bg-orange-dark text-white p-2 w-full disabled:cursor-not-allowed disabled:bg-orange-base/60"
+            className="justify-center flex rounded-lg bg-orange-base border-transparent hover:bg-orange-dark text-white p-2 w-full disabled:cursor-not-allowed disabled:bg-orange-base/60"
             disabled={isSubmitting || Object.keys(errors).length > 0}
           >
-            Acessar
-            <ArrowRight />
-          </button>
+            {isSubmitting ? <Loader2 className="animate-spin self-center"/> : <span className="justify-between flex w-full">Acessar <ArrowRight /></span>}
+            
+          </button>   
         </form>
 
         <footer className="flex flex-col gap-5">

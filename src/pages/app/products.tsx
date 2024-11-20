@@ -6,6 +6,7 @@ import { useSearchParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ProductSkeleton } from "./product-link-skeleton";
 
 const productFilterSchema = z.object({
   search: z.string().optional(),
@@ -129,10 +130,10 @@ export function Products() {
           </button>
         </form>
         <div className="col-span-2 grid grid-cols-2 gap-4">
-          {result &&
+          {result ?
             result.products.map((product) => {
               return <ProductLink key={product.id} products={product} />;
-            })}
+            }) : (<ProductSkeleton/>)}
         </div>
       </div>
     </div>

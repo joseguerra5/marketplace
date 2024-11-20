@@ -37,6 +37,7 @@ export function AddProduct() {
     control,
     clearErrors,
     setValue,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<ProductForm>({
     resolver: zodResolver(productForm),
@@ -67,6 +68,8 @@ export function AddProduct() {
     }
   };
 
+  
+
   async function handleAddProduct(data: ProductForm) {
     try {
       if (data.attachmentsIds?.length && data.attachmentsIds.length > 0) {
@@ -79,6 +82,7 @@ export function AddProduct() {
         const attachmentId = uploadedProductFile.attachments[0].id;
         console.log("console do attachmentID:", attachmentId);
 
+        
         const productResponse = await addProduct({
           attachmentsIds: [attachmentId],
           categoryId: data.categoryId,
@@ -87,7 +91,6 @@ export function AddProduct() {
           title: data.title,
         });
 
-        console.log("console do productResponse:", productResponse);
         toast.success("Produto cadastrado com sucesso", {
           action: {
             label: "Detalhe do produto",
@@ -95,6 +98,8 @@ export function AddProduct() {
           },
         });
       }
+      reset()
+      setImagePreview(null)
     } catch (e) {
       toast.error(`o erro foi ${e}`);
       console.log("data do arquivo", data);
@@ -102,6 +107,7 @@ export function AddProduct() {
       console.log("errou");
     }
   }
+
 
   return (
     <div className="flex flex-col gap-10 max-w-7xl m-auto">

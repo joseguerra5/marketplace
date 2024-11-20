@@ -14,6 +14,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/api/get-profile";
 import { SignOut } from "@/api/sign-out";
+import {toast} from "sonner"
 
 export function Header() {
   const navigate = useNavigate();
@@ -31,6 +32,18 @@ export function Header() {
       });
     },
   });
+
+  function handleSignOut() {
+    toast.promise(
+      signOutFn(),
+      {
+        loading: 'Saindo do perfil...',
+        success: () => 'Você saiu com sucesso!',
+        error: 'Ocorreu um erro ao sair do perfil.',
+      }
+    );
+  }
+  
 
   return (
     <header className="flex justify-between  py-5 ">
@@ -88,7 +101,7 @@ export function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild disabled={isSignOut}>
               <button
-                onClick={() => signOutFn()}
+                onClick={handleSignOut}
                 type="button"
                 className="flex items-center text-orange-base justify-between hover:text-orange-dark w-full"
               >

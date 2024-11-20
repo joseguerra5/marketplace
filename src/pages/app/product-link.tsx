@@ -34,7 +34,7 @@ export function ProductLink({ products }: ProductLinkProps) {
   return (
     <Link
       to={`/products/${products.id}`}
-      className=" bg-white rounded-xl p-1 min-w-fit min-h-fit hover:outline-blue-base outline-none"
+      className=" bg-white rounded-xl p-1 min-w-fit max-w-80 min-h-fit hover:outline-blue-base outline-none overflow-hidden"
     >
       <div className="relative">
         <div className="absolute top-2 right-2 flex gap-2">

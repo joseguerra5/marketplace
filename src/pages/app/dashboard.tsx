@@ -2,7 +2,10 @@ import { getProductsAvailable } from "@/api/get-products-available";
 import { getProductsSold } from "@/api/get-products-sold";
 import { getSellerViews } from "@/api/get-views-received-month";
 import { getViewsPerDay } from "@/api/get-views-received-per-day";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { pt } from "date-fns/locale";
 import {
   BadgeDollarSign,
   Calendar,
@@ -27,25 +30,36 @@ export interface GetViewsPerDayResponse {
 }
 
 export function Dashboard() {
-  const { data: productsSold } = useQuery({
+  const { data: productsSold, isLoading: isLoadingProductsSold } = useQuery({
     queryKey: ["productsSold"],
     queryFn: getProductsSold,
   });
 
-  const { data: productsAvailable } = useQuery({
+  const { data: productsAvailable, isLoading: isLoadingProductsAvailable } = useQuery({
     queryKey: ["productsAvailable"],
     queryFn: getProductsAvailable,
   });
 
-  const { data: sellerViews } = useQuery({
+  const { data: sellerViews, isLoading: isLoadingSellerViews } = useQuery({
     queryKey: ["sellerViews"],
     queryFn: getSellerViews,
   });
 
-  const { data: viewsPerDay } = useQuery({
+  const { data: viewsPerDay, isLoading: isLoadingViewsPerDay } = useQuery({
     queryKey: ["viewsPerDay"],
     queryFn: () => getViewsPerDay(),
   });
+
+  const firstDate = viewsPerDay?.viewsPerDay[0]?.date ?? new Date().toISOString();
+  
+  const formmattedFistdDate = format(firstDate, "dd 'de' MMMM", { locale: pt })
+
+
+
+  const lastDate = viewsPerDay?.viewsPerDay[viewsPerDay.viewsPerDay.length - 1]?.date  ?? new Date().toISOString();
+
+  const formmattedLastdDate = format(lastDate, "dd 'de' MMMM", { locale: pt })
+
 
   const chartData = useMemo(() => {
     return viewsPerDay?.viewsPerDay.map((chartItem) => {
@@ -73,7 +87,7 @@ export function Dashboard() {
             </div>
             <div className="flex flex-col gap-2 self-center">
               <strong className="text-gray-400 font-bold text-3xl ">
-                {productsSold?.amount}
+                {isLoadingProductsSold ? (<Skeleton className="w-12 h-9"/>) : (productsSold?.amount)}
               </strong>
               <span className="text-gray-300 flex-wr text-xs">
                 produtos
@@ -88,7 +102,7 @@ export function Dashboard() {
             </div>
             <div className="flex flex-col gap-2 self-center">
               <strong className="text-gray-400 font-bold text-3xl ">
-                {productsAvailable?.amount}
+              {isLoadingProductsAvailable ? (<Skeleton className="w-12 h-9"/>) : (productsAvailable?.amount)}
               </strong>
               <span className="text-gray-300 flex-wr text-xs">
                 produtos <br /> anunciados
@@ -102,7 +116,7 @@ export function Dashboard() {
             </div>
             <div className="flex flex-col gap-2 self-center">
               <strong className="text-gray-400 font-bold text-3xl ">
-                {sellerViews?.amount}
+              {isLoadingSellerViews ? (<Skeleton className="w-12 h-9"/>) : (sellerViews?.amount)}
               </strong>
               <span className="text-gray-300 flex-wr text-xs">
                 Pessoas <br /> visitantes
@@ -114,12 +128,23 @@ export function Dashboard() {
         <div className="bg-white rounded-3xl flex-1 p-6 flex flex-col gap-4">
           <header className="flex justify-between items-center">
             <strong>Visitantes</strong>
-            <strong className="flex items-center">
-              <Calendar className="text-blue-light" /> 25 DE JUNho - 25 DE Julho
+            {isLoadingViewsPerDay ? ( <Skeleton className="w-64 h-6"/> ) : (
+            <strong className="flex items-center gap-2">
+              <Calendar className="text-blue-dark w-4" />
+              <span className="text-gray-200 text-xs uppercase font-medium">
+                {formmattedFistdDate} - {formmattedLastdDate}
+              </span>
+              
             </strong>
+          )}
+            
           </header>
           <div className="">
-            {viewsPerDay ? (
+            {isLoadingViewsPerDay ? (
+                <div className="flex h-[240px] w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
               <ResponsiveContainer width="100%" height={290}>
                 <LineChart style={{ fontSize: 12 }} data={chartData}>
                   <XAxis
@@ -140,10 +165,7 @@ export function Dashboard() {
                   />
                 </LineChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="flex h-[240px] w-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
+            
             )}
           </div>
         </div>
