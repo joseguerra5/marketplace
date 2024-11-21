@@ -97,14 +97,14 @@ export function Products() {
             control={control}
             render={({ field: { name, onChange, value, disabled } }) => {
               return (
-                <div className="group flex items-center focus-within:text-orange-base">
+                <div className="group flex items-center border-b-2 focus-within:text-orange-base">
                   <BadgeDollarSign className="text-gray-200 group-focus-within:text-orange-base" />
                   <select
                     name={name}
                     onChange={onChange}
                     value={value}
                     disabled={disabled}
-                    className="text-gray-200  bg-transparent py-2 border-b-2 flex items-center gap-2 w-full "
+                    className="text-gray-200  bg-transparent py-2 flex items-center gap-2 w-full "
                   >
                     <option value="" disabled selected>
                       Status

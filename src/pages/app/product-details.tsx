@@ -1,9 +1,9 @@
 import { getProductById } from "@/api/get-product-by-id";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Check, CircleAlert, ImageUp, Loader2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, CircleAlert, ImageUp, Loader2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProductStatus } from "./product-status";
-import { changeProductStatus } from "@/api/change-product-status";
+
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
@@ -13,6 +13,7 @@ import { getCategories } from "@/api/get-list-categories";
 import { productFileUpload } from "@/api/add-product";
 import { editProductById } from "@/api/put-product-by-id";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChangeProductStatus } from "./change-product-status";
 
 const productForm = z.object({
   title: z.string(),
@@ -64,28 +65,28 @@ export function ProductDetails() {
   });
 
   function formatCurrencyNumber(currency: number) {
-    const numericValue = parseFloat(currency.toString().replace(/\D/g, '')) / 100;
+    const numericValue = parseFloat(currency.toString().replace(/\D/g, '')) / 100 || 0;
   
     return parseFloat(numericValue.toFixed(2));
   }
 
   const priceformated = formatCurrencyNumber(result?.product.priceInCents ?? 0)
 
-  const [currency, setCurrency] = useState("");
+  const [currency, setCurrency] = useState<number>(priceformated);
 
   function formatCurrency(event: React.ChangeEvent<HTMLInputElement>) {
     let inputValue = event.target.value
+
     inputValue = inputValue.replace(/\D/g, '')
-
-    const numericValue = parseFloat(inputValue.toString().replace(/\D/g, '')) / 100;
-  
-
+    
+    let numericValue = parseFloat(inputValue.toString().replace(/\D/g, '')) / 100;
+    
+    if (Number.isNaN(numericValue)) {
+      numericValue = 0
+    }
+    
     setCurrency(numericValue)
   }
-
-  
-
-
 
   const {
     register,
@@ -113,35 +114,6 @@ export function ProductDetails() {
 
   const queryClient = useQueryClient();
 
-  const { mutateAsync: cancelProductFn } = useMutation({
-    mutationFn: changeProductStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      queryClient.invalidateQueries({ queryKey: ["productsAvailable"] });
-      queryClient.invalidateQueries({ queryKey: ["productsSold"] });
-      toast.success("Produto alterado com sucesso!");
-    },
-  });
-
-  const { mutateAsync: soldProductFn } = useMutation({
-    mutationFn: changeProductStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      queryClient.invalidateQueries({ queryKey: ["productsAvailable"] });
-      queryClient.invalidateQueries({ queryKey: ["productsSold"] });
-      toast.success("Produto alterado com sucesso!");
-    },
-  });
-
-  const { mutateAsync: availableProductFn } = useMutation({
-    mutationFn: changeProductStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      queryClient.invalidateQueries({ queryKey: ["productsAvailable"] });
-      queryClient.invalidateQueries({ queryKey: ["productsSold"] });
-      toast.success("Produto alterado com sucesso!");
-    },
-  });
 
   async function handleEditProduct(data: ProductForm) {
     try {
@@ -217,38 +189,7 @@ export function ProductDetails() {
           </span>
         </div>
         <div className="flex gap-2 items-end">
-          {result?.product.status === "available" ? (
-            <button
-              className="text-orange-base flex gap-2 hover:text-orange-dark"
-              type="button"
-              onClick={() => soldProductFn({ id: productId, status: "sold" })}
-            >
-              <Check /> Marcar como vendido
-            </button>
-          ) : (
-            <button
-              className="text-orange-base flex gap-2 hover:text-orange-dark"
-              type="button"
-              onClick={() =>
-                availableProductFn({ id: productId, status: "available" })
-              }
-            >
-              <Check /> Marcar como disponível
-            </button>
-          )}
-          <button
-            className="text-orange-base flex gap-2 hover:text-orange-dark disabled:text-orange-base/60 disabled:cursor-not-allowed"
-            type="button"
-            disabled={
-              result?.product.status === "sold" ||
-              result?.product.status === "cancelled"
-            }
-            onClick={() =>
-              cancelProductFn({ id: productId, status: "cancelled" })
-            }
-          >
-            <Ban /> Desativar anúncio
-          </button>
+         <ChangeProductStatus status={result?.product.status} productId={productId}/>
         </div>
       </div>
 
@@ -272,7 +213,11 @@ export function ProductDetails() {
                     <span className="text-sm">Selecione a imagem do produto</span>
                   </div>
                   <img
-                    src={imagePreview ? imagePreview : result?.product.attachments[0].url ?? undefined}
+                    src={   imagePreview 
+                      ? imagePreview 
+                      : Array.isArray(result?.product.attachments[0].url)
+                      ? result?.product.attachments[0].url[0] 
+                      : result?.product.attachments[0].url ?? ''}
                     alt=""
                     className="w-full h-full object-cover"
                   />
@@ -303,7 +248,7 @@ export function ProductDetails() {
               <div className="flex w-full gap-5">
                 <div className="w-9/12 group focus-within:text-orange-base">
                   <label
-                    htmlFor=""
+                    htmlFor="title"
                     className="text-gray-300 group-focus-within:text-orange-base text-xs font-medium"
                   >
                     TÍTULO
@@ -312,6 +257,7 @@ export function ProductDetails() {
                     <input
                       type="text"
                       placeholder="Nome do produto"
+                      id="title"
                       className="bg-transparent placeholder-gray-200 text-gray-400
                     outline-none w-full 
                     "
@@ -328,7 +274,7 @@ export function ProductDetails() {
 
                 <div className="group focus-within:text-orange-base">
                   <label
-                    htmlFor=""
+                    htmlFor="priceInCents"
                     className="text-gray-300 group-focus-within:text-orange-base text-xs font-medium"
                   >
                     VALOR
@@ -339,11 +285,11 @@ export function ProductDetails() {
                     </span>
                     <input
                       type="text"
+                      id="priceInCents"
                       placeholder="0,00"
                       value={currency}
                       className="bg-transparent placeholder-gray-200 text-gray-400
-                      outline-none w-full
-                      "
+                      outline-none w-full"
                       {...register("priceInCents", { valueAsNumber: true })}
                       onChange={formatCurrency}
                     />
@@ -359,7 +305,7 @@ export function ProductDetails() {
 
               <div className="group focus-within:text-orange-base mb-5">
                 <label
-                  htmlFor=""
+                  htmlFor="description"
                   className="text-gray-300 group-focus-within:text-orange-base text-xs font-medium"
                 >
                   DESCRIÇÃO
@@ -372,6 +318,7 @@ export function ProductDetails() {
                   caret-orange-base
                   outline-none w-full
                   "
+                  id="description"
                     {...register("description")}
                   />
                 </div>
@@ -399,6 +346,7 @@ export function ProductDetails() {
                           className="bg-transparent py-2 border-b-2 flex gap-2 w-full text-gray-200"
                           name={name}
                           onChange={onChange}
+                          id="categoryId"
                           value={value}
                           disabled={disabled}
                           defaultValue={result?.product.category.id}
